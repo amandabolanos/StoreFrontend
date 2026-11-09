@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Product } from "../models/response/Product";
 import { deleteProduct, getProducts } from "../services/ProductService";
-import { Trash2 } from "lucide-react";
+import { Package, Trash2 } from "lucide-react";
 
 export default function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,7 +45,7 @@ export default function ProductsTable() {
     try {
       await deleteProduct(productResourceId);
 
-      // Actualizar la tabla sin recargar la página
+      // Quitar la tarjeta sin recargar la página
       setProducts((currentProducts) =>
         currentProducts.filter(
           (product) => product.productResourceId !== productResourceId,
@@ -63,12 +63,13 @@ export default function ProductsTable() {
   };
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-cream-300 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cream-300 px-6 py-5">
-        <h2 className="text-lg font-semibold text-forest-800">Lista de productos</h2>
+    <div>
+      {/* Título de la sección */}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-extrabold text-ink-900">Nuestros productos</h2>
 
         {!isLoading && (
-          <span className="rounded-full bg-cream-200 px-3 py-1 text-xs font-medium text-ink-700">
+          <span className="text-sm text-ink-500">
             {products.length} {products.length === 1 ? "producto" : "productos"}
           </span>
         )}
@@ -77,7 +78,7 @@ export default function ProductsTable() {
       {error && (
         <div
           role="alert"
-          className="m-5 rounded-xl border border-clay-200 bg-clay-50 p-4 text-sm text-clay-700"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
           {error}
         </div>
@@ -86,69 +87,59 @@ export default function ProductsTable() {
       {isLoading ? (
         <p
           role="status"
-          className="flex items-center justify-center gap-3 px-6 py-16 text-center text-sm text-ink-500"
+          className="flex items-center justify-center gap-3 py-16 text-sm text-ink-500"
         >
           <span
             aria-hidden="true"
-            className="size-5 animate-spin rounded-full border-2 border-forest-200 border-t-forest-600"
+            className="size-5 animate-spin rounded-full border-2 border-green-200 border-t-green-600"
           />
           Cargando productos...
         </p>
+      ) : products.length === 0 && !error ? (
+        <p className="rounded-2xl bg-white py-14 text-center text-sm text-ink-500">
+          Aún no hay productos en el catálogo.
+        </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-forest-700 text-xs uppercase tracking-wider text-cream-100">
-              <tr>
-                <th scope="col" className="px-6 py-3.5 font-semibold">Product Resourse ID</th>
-                <th scope="col" className="px-6 py-3.5 font-semibold">Nombre</th>
-                <th scope="col" className="px-6 py-3.5 text-center font-semibold">Acciones</th>
-              </tr>
-            </thead>
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {products.map((product) => (
+            <li
+              key={product.productResourceId}
+              className="group relative flex flex-col rounded-2xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+            >
+              {/* Espacio de la "foto" del producto */}
+              <div className="flex aspect-square items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <Package size={44} strokeWidth={1.5} aria-hidden="true" />
+              </div>
 
-            <tbody className="divide-y divide-cream-200">
-              {products.length === 0 && !error && (
-                <tr>
-                  <td colSpan={3} className="px-6 py-14 text-center text-sm text-ink-500">
-                    Aún no hay productos en el catálogo.
-                  </td>
-                </tr>
-              )}
+              {/* Botón eliminar en la esquina, como el "+" de la imagen */}
+              <button
+                type="button"
+                onClick={() => handleDelete(product.productResourceId)}
+                disabled={deletingId !== null}
+                title={`Eliminar ${product.name}`}
+                aria-label={`Eliminar ${product.name}`}
+                className="absolute top-5 right-5 z-10 flex size-8 items-center justify-center rounded-full bg-white text-red-600 shadow
+                           transition-colors hover:bg-red-600 hover:text-white
+                           focus-visible:outline-2 focus-visible:outline-red-600
+                           disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+              </button>
 
-              {products.map((product) => (
-                <tr
-                  key={product.productResourceId}
-                  className="transition-colors odd:bg-white even:bg-cream-50 hover:bg-forest-50"
-                >
-                  <td className="px-6 py-4 font-mono text-xs text-ink-500">{product.productResourceId}</td>
-                  <td className="px-6 py-4">
-                    <Link
-                      to={`/products/${product.productResourceId}`}
-                      className="rounded font-medium text-forest-700 underline-offset-4 hover:text-forest-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-600"
-                    >
-                      {product.name}
-                    </Link>
-                  </td>
+              <Link
+                to={`/products/${product.productResourceId}`}
+                className="mt-3 rounded font-bold text-ink-900 after:absolute after:inset-0 after:content-[''] hover:text-green-700
+                           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+              >
+                {product.name}
+              </Link>
 
-                  <td className="px-6 py-4 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(product.productResourceId)}
-                      disabled={deletingId !== null}
-                      title={`Eliminar ${product.name}`}
-                      aria-label={`Eliminar ${product.name}`}
-                      className="rounded-lg p-2.5 text-clay-600 transition-colors focus-visible:outline-2 focus-visible:outline-clay-600
-                                 hover:bg-clay-50
-                                 disabled:cursor-not-allowed
-                                 disabled:opacity-50"
-                    >
-                      <Trash2 size={18} aria-hidden="true" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              <span className="mt-1 truncate font-mono text-[11px] text-ink-500">
+                {product.productResourceId.slice(0, 8)}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
